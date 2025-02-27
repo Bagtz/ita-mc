@@ -1,9 +1,0 @@
-/home/bagtz/modular-carnival/ita-mc/contracts/target/debug/deps/libethers_signers-dc9e615d98235ed0.rmeta: /home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ethers-signers-2.0.14/src/lib.rs /home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ethers-signers-2.0.14/src/wallet/mod.rs /home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ethers-signers-2.0.14/src/wallet/mnemonic.rs /home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ethers-signers-2.0.14/src/wallet/private_key.rs /home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ethers-signers-2.0.14/src/../README.md
-
-/home/bagtz/modular-carnival/ita-mc/contracts/target/debug/deps/ethers_signers-dc9e615d98235ed0.d: /home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ethers-signers-2.0.14/src/lib.rs /home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ethers-signers-2.0.14/src/wallet/mod.rs /home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ethers-signers-2.0.14/src/wallet/mnemonic.rs /home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ethers-signers-2.0.14/src/wallet/private_key.rs /home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ethers-signers-2.0.14/src/../README.md
-
-/home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ethers-signers-2.0.14/src/lib.rs:
-/home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ethers-signers-2.0.14/src/wallet/mod.rs:
-/home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ethers-signers-2.0.14/src/wallet/mnemonic.rs:
-/home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ethers-signers-2.0.14/src/wallet/private_key.rs:
-/home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ethers-signers-2.0.14/src/../README.md:

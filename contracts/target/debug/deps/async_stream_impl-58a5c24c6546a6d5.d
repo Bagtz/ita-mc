@@ -1,5 +1,0 @@
-/home/bagtz/modular-carnival/ita-mc/contracts/target/debug/deps/libasync_stream_impl-58a5c24c6546a6d5.so: /home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/async-stream-impl-0.3.6/src/lib.rs
-
-/home/bagtz/modular-carnival/ita-mc/contracts/target/debug/deps/async_stream_impl-58a5c24c6546a6d5.d: /home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/async-stream-impl-0.3.6/src/lib.rs
-
-/home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/async-stream-impl-0.3.6/src/lib.rs:
