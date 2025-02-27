@@ -1,0 +1,1 @@
+/home/bagtz/modular-carnival/ita-mc/contracts/target/x86_64-unknown-linux-gnu/debug/stylus-hello-world: /home/bagtz/modular-carnival/ita-mc/contracts/src/lib.rs /home/bagtz/modular-carnival/ita-mc/contracts/src/main.rs

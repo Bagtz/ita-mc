@@ -5,165 +5,111 @@ extern crate alloc;
 /// Import items from the SDK. The prelude contains common traits and macros.
 use stylus_sdk::prelude::*;
 use stylus_sdk::{msg, alloy_primitives::Address};
-use stylus_sdk::storage::{StorageMap, StorageVec, StorageString};
+//use stylus_sdk::storage::{StorageMap, StorageVec, StorageString};
+//use stylus_sdk::storage::{StorageAddress, StorageU64, StorageU128, StorageI128};
 
-use alloy_primitives::{U64, Uint};
+use alloy_primitives::{I128};
 
 // Estrutura principal do contrato
 sol_storage! {
     #[entrypoint]
-    pub struct Splitwise {
-        /// Contador para IDs de grupos
-        uint64 group_counter;
-        /// Mapeia ID do grupo para o grupo
-        mapping(uint64 => Group) groups;
-    }
-
-    struct Group {
-        string name;
-        Participant[] participants;
-        Transaction[] transactions;
-        mapping(address => int128) balances;
-    }
-
-    struct Participant {
-        string name;
-        address wallet;
-    }
-
-    struct Transaction {
-        address payer;
-        uint128 amount;
-        string description;
+    pub struct Group {
         address[] participants;
+        mapping(address => string) names;
+        mapping(address => int128) balances;
+        mapping(address => mapping(address => int128)) debts;
     }
 }
 
 
 #[public]
-impl Splitwise {
-    // Função para criar um novo grupo
-    fn create_group(&mut self, name: String) -> Result<u64, Vec<u8>> {
-        // Obtém o valor atual do contador
-        let group_id = self.group_counter.get();
-        // Incrementa o contador diretamente
-        self.group_counter.set(group_id.checked_add(Uint::from(1)).unwrap());
+impl Group {
 
-        let mut group = Group::
-        group.name.set_str(&name);
+    fn add_participant(&mut self, name: String, wallet: Address) -> Result<(), Vec<u8>> {
+    
+        // Criando um novo participante
+        self.participants.push(wallet);
+        self.names.setter(wallet).set_str(&name);
+     
+        // Inicializando o saldo do participante em 0
+        self.balances.insert(wallet, I128::ZERO);
 
-        self.groups.insert(U64::from(group_id), group);
-        Ok(group_id)
-    }
-
-    /// Função para adicionar uma pessoa a um grupo
-    fn add_participant(&mut self, group_id: u64, name: String, wallet: Address) -> Result<(), Vec<u8>> {
-        let group_id_key = U64::from(group_id);
-        if !self.groups.contains_key(&group_id_key) {
-            return Err("Group does not exist".into());
-        }
-
-        let mut group = self.groups.get_mut(&group_id_key).unwrap();
-        let mut participant = Participant::new();
-        participant.name.set_str(&name);
-        participant.wallet.set(wallet);
-
-        // Verificar se a carteira já está no grupo
-        for i in 0..group.participants.len() {
-            let participant_wallet = group.participants.get(i).unwrap().wallet.get();
-            if participant_wallet == wallet {
-                return Err("Wallet already in group".into());
-            }
-        }
-
-        group.participants.push(participant);
         Ok(())
     }
 
-    /// Função para dividir uma despesa igualmente entre os participantes de um grupo
-    fn split_equally(
-        &mut self,
-        group_id: u64,
-        amount: u128,
-        description: String,
-        participants: Vec<Address>,
-    ) -> Result<(), Vec<u8>> {
-        let group_id_key = U64::from(group_id);
-        if !self.groups.contains_key(&group_id_key) {
-            return Err("Group does not exist".into());
+    fn get_balance(&self, wallet: Address) -> I128 {
+        if !self.is_participant(wallet) {
+            panic!("Wallet is not a participant");
         }
 
-        let payer = msg::sender();
-        let mut group = self.groups.get_mut(&group_id_key).unwrap();
+        return self.balances.get(wallet);
+    }
 
-        if !self.is_participant(group_id, payer) {
-            return Err("Payer not in group".into());
+    // Função para registrar uma despesa e ajustar os saldos
+    fn add_expense(&mut self, payer: Address, borrowers: Vec<Address>, amount: I128) -> Result<(), Vec<u8>> {
+        if borrowers.is_empty() {
+            panic!("Borrowers array cannot be empty");
         }
-        for &participant in &participants {
-            if !self.is_participant(group_id, participant) {
-                return Err("A participant is not in group".into());
+
+        // Verifica se payer e todos os borrowers são participantes
+        let mut payer_exists = false;
+        for i in 0..self.participants.len() {
+            let participant = self.participants.get(i).unwrap();
+            if participant == payer {
+                payer_exists = true;
+            }
+        }
+        if !payer_exists {
+            panic!("Payer is not a participant");
+        }
+
+        for borrower in &borrowers {
+            let mut borrower_exists = false;
+            for i in 0..self.participants.len() {
+                if self.participants.get(i).unwrap() == *borrower {
+                    borrower_exists = true;
+                    break;
+                }
+            }
+            if !borrower_exists {
+                panic!("A borrower is not a participant");
             }
         }
 
-        let num_participants = participants.len() as u128;
-        if num_participants == 0 {
-            return Err("No participants specified".into());
-        }
-        let split_amount = amount / num_participants;
-
-        // Atualizar saldo do pagador (negativo)
-        let mut payer_balance = group.balances.get(&payer).unwrap_or(0);
-        payer_balance -= amount as i128;
-        group.balances.insert(payer, payer_balance);
-
-        // Atualizar saldos dos participantes (positivo)
-        for &participant in &participants {
-            let mut balance = group.balances.get(&participant).unwrap_or(0);
-            balance += split_amount as i128;
-            group.balances.insert(participant, balance);
+        // Garante que o amount é positivo
+        if amount < I128::ZERO {
+            panic!("Amount must be positive");
         }
 
-        // Registrar a transação
-        let mut transaction = Transaction::new();
-        transaction.payer.set(payer);
-        transaction.amount.set(amount);
-        transaction.description.set_str(&description);
-        for &participant in &participants {
-            transaction.participants.push(participant);
+        // Calcula o valor por borrower
+        let num_borrowers = I128::try_from(borrowers.len()).unwrap();
+        let amount_per_borrower = amount / num_borrowers; // Divisão inteira
+
+        // Ajusta os saldos
+        let payer_balance = self.balances.get(payer);
+        self.balances.insert(payer, payer_balance + amount);
+
+        // Ajusta o saldo de cada borrower (diminui pela parte proporcional)
+        for borrower in borrowers {
+            let borrower_balance = self.balances.get(borrower);
+            self.balances.insert(borrower, borrower_balance - amount_per_borrower);
         }
-        group.transactions.push(transaction);
 
         Ok(())
     }
 
     /// Função auxiliar para verificar se uma carteira está no grupo
-    fn is_participant(&self, group_id: u64, wallet: Address) -> bool {
-        let group_id_key = U64::from(group_id);
-        if let Some(group) = self.groups.get(&group_id_key) {
-            for i in 0..group.participants.len() {
-                if group.participants.get(i).unwrap().wallet.get() == wallet {
-                    return true;
-                }
+    fn is_participant(&self, wallet: Address) -> bool {
+        let mut is_participant = false;
+        for i in 0..self.participants.len() {
+            if self.participants.get(i).unwrap() == wallet {
+                is_participant = true;
+                break;
             }
         }
-        false
+        return is_participant;
     }
 
-    /// Função para consultar o saldo de uma pessoa em um grupo
-    fn get_balance(&self, group_id: u64, wallet: Address) -> Result<i128, Vec<u8>> {
-        let group_id_key = U64::from(group_id);
-        if !self.groups.contains_key(&group_id_key) {
-            return Err("Group does not exist".into());
-        }
-
-        if !self.is_participant(group_id, wallet) {
-            return Err("Wallet not in group".into());
-        }
-
-        let group = self.groups.get(&group_id_key).unwrap();
-        let balance = group.balances.get(&wallet).unwrap_or(0);
-        Ok(balance)
-    }
 }
 
 
