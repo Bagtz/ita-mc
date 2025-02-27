@@ -1,0 +1,11 @@
+/home/bagtz/modular-carnival/ita-mc/contracts/target/debug/deps/libwee_alloc-be8425a82c40f2bc.rmeta: /home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/wee_alloc-0.4.5/src/lib.rs /home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/wee_alloc-0.4.5/src/extra_assert.rs /home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/wee_alloc-0.4.5/src/const_init.rs /home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/wee_alloc-0.4.5/src/neighbors.rs /home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/wee_alloc-0.4.5/src/size_classes.rs /home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/wee_alloc-0.4.5/src/imp_unix.rs /home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/wee_alloc-0.4.5/src/size_classes_init.rs
+
+/home/bagtz/modular-carnival/ita-mc/contracts/target/debug/deps/wee_alloc-be8425a82c40f2bc.d: /home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/wee_alloc-0.4.5/src/lib.rs /home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/wee_alloc-0.4.5/src/extra_assert.rs /home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/wee_alloc-0.4.5/src/const_init.rs /home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/wee_alloc-0.4.5/src/neighbors.rs /home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/wee_alloc-0.4.5/src/size_classes.rs /home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/wee_alloc-0.4.5/src/imp_unix.rs /home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/wee_alloc-0.4.5/src/size_classes_init.rs
+
+/home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/wee_alloc-0.4.5/src/lib.rs:
+/home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/wee_alloc-0.4.5/src/extra_assert.rs:
+/home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/wee_alloc-0.4.5/src/const_init.rs:
+/home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/wee_alloc-0.4.5/src/neighbors.rs:
+/home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/wee_alloc-0.4.5/src/size_classes.rs:
+/home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/wee_alloc-0.4.5/src/imp_unix.rs:
+/home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/wee_alloc-0.4.5/src/size_classes_init.rs:
