@@ -110,7 +110,7 @@ impl Group {
     //----------------------------------------------------------------------------------------------------------------------------
 
      // Função principal para calcular transações a partir de saldos e endereços
-     pub fn simplify_debts(&mut self) {
+    pub fn simplify_debts(&mut self) {
 
         // 1. Coleta os saldos dos participantes
         let mut balances: Vec<I128> = Vec::new();
@@ -180,45 +180,138 @@ impl Group {
             inner_map.insert(debtor, amount);
         }
     }
+
+    pub fn get_transaction(&self, creditor: Address, debtor: Address) -> I128 {
+        self.transactions.get(creditor).get(debtor)
+    }
+
 }
 
+// Seção de testes
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use stylus_sdk::alloy_primitives::Address;
+    use stylus_sdk::testing::*;
 
-// /// Declare that `Counter` is a contract with the following external methods.
-// #[public]
-// impl Counter {
-//     /// Gets the number from storage.
-//     pub fn number(&self) -> U256 {
-//         self.number.get()
-//     }
+    // Função auxiliar para criar endereços de teste
+    fn mock_address(id: u8) -> Address {
+        Address::from([id; 20])
+    }
 
-//     /// Sets a number in storage to a user-specified value.
-//     pub fn set_number(&mut self, new_number: U256) {
-//         self.number.set(new_number);
-//     }
+    #[test]
+    fn test_add_participant() {
+        let vm = TestVM::default();
+        let mut contract = Group::from(&vm);
+        let wallet = mock_address(1);
 
-//     /// Sets a number in storage to a user-specified value.
-//     pub fn mul_number(&mut self, new_number: U256) {
-//         self.number.set(new_number * self.number.get());
-//     }
+        contract.add_participant(wallet).unwrap();
+        assert_eq!(contract.participants.len(), 1);
+        assert_eq!(contract.participants.get(0).unwrap(), wallet);
+        assert_eq!(contract.balances.get(wallet), I128::ZERO);
+    }
 
-//     /// Sets a number in storage to a user-specified value.
-//     pub fn add_number(&mut self, new_number: U256) {
-//         self.number.set(new_number + self.number.get());
-//     }
+    #[test]
+    fn test_is_participant() {
+        let vm = TestVM::default();
+        let mut contract = Group::from(&vm);
+        let wallet1 = mock_address(1);
+        let wallet2 = mock_address(2);
 
-//     /// Increments `number` and updates its value in storage.
-//     pub fn increment(&mut self) {
-//         let number = self.number.get();
-//         self.set_number(number + U256::from(1));
-//     }
+        contract.add_participant(wallet1).unwrap();
+        assert!(contract.is_participant(wallet1));
+        assert!(!contract.is_participant(wallet2));
+    }
 
-//     /// Adds the wei value from msg_value to the number in storage.
-//     #[payable]
-//     pub fn add_from_msg_value(&mut self) {
-//         let number = self.number.get();
-//         self.set_number(number + self.vm().msg_value());
-//     }
-// }
+    #[test]
+    #[should_panic(expected = "Wallet is not a participant")]
+    fn test_get_balance_non_participant() {
+        let vm = TestVM::default();
+        let contract = Group::from(&vm);
+        let wallet = mock_address(1);
+        contract.get_balance(wallet); // Deve entrar em pânico
+    }
+
+    #[test]
+    fn test_get_balance() {
+        let vm = TestVM::default();
+        let mut contract = Group::from(&vm);
+        let wallet = mock_address(1);
+
+        contract.add_participant(wallet).unwrap();
+        assert_eq!(contract.get_balance(wallet), I128::ZERO);
+    }
+
+    #[test]
+    fn test_split_equally() {
+        let vm = TestVM::default();
+        let mut contract = Group::from(&vm);
+        let payer = mock_address(1);
+        let borrower1 = mock_address(2);
+        let borrower2 = mock_address(3);
+
+        contract.add_participant(payer).unwrap();
+        contract.add_participant(borrower1).unwrap();
+        contract.add_participant(borrower2).unwrap();
+
+        let amount = I128::from_dec_str("100").unwrap();
+        let borrowers = vec![borrower1, borrower2];
+        contract.split_equally(payer, borrowers, amount).unwrap();
+
+        assert_eq!(contract.get_balance(payer), I128::from_dec_str("100").unwrap());
+        assert_eq!(contract.get_balance(borrower1), I128::from_dec_str("-50").unwrap());
+        assert_eq!(contract.get_balance(borrower2), I128::from_dec_str("-50").unwrap());
+    }
+
+    #[test]
+    #[should_panic(expected = "Borrowers array cannot be empty")]
+    fn test_split_equally_empty_borrowers() {
+        let vm = TestVM::default();
+        let mut contract = Group::from(&vm);
+        let payer = mock_address(1);
+        contract.add_participant(payer).unwrap();
+        contract.split_equally(payer, vec![], I128::from_dec_str("100").unwrap()).unwrap();
+    }
+
+    #[test]
+    fn test_simplify_debts() {
+        let vm = TestVM::default();
+        let mut contract = Group::from(&vm);
+        let wallet1 = mock_address(1); // Devedor
+        let wallet2 = mock_address(2); // Credor
+        let wallet3 = mock_address(3); // Devedor
+
+        contract.add_participant(wallet1).unwrap();
+        contract.add_participant(wallet2).unwrap();
+        contract.add_participant(wallet3).unwrap();
+
+        let borrowers = vec![wallet1, wallet3];
+        contract.split_equally(wallet2, borrowers, I128::from_dec_str("100").unwrap()).unwrap();
+
+        contract.simplify_debts();
+
+        assert_eq!(contract.get_transaction(wallet2, wallet1), I128::from_dec_str("50").unwrap());
+        assert_eq!(contract.get_transaction(wallet2, wallet3), I128::from_dec_str("50").unwrap());
+        assert_eq!(contract.get_transaction(wallet1, wallet2), I128::ZERO);
+    }
+
+    #[test]
+    fn test_get_transaction() {
+        let vm = TestVM::default();
+        let mut contract = Group::from(&vm);
+        let creditor = mock_address(1);
+        let debtor = mock_address(2);
+
+        contract.add_participant(creditor).unwrap();
+        contract.add_participant(debtor).unwrap();
+
+        let mut inner_map = contract.transactions.setter(creditor);
+        inner_map.insert(debtor, I128::from_dec_str("42").unwrap());
+
+        assert_eq!(contract.get_transaction(creditor, debtor), I128::from_dec_str("42").unwrap());
+        assert_eq!(contract.get_transaction(debtor, creditor), I128::ZERO); // Nenhum valor na direção oposta
+    }
+}
 
 // #[cfg(test)]
 // mod test {
