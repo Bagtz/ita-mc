@@ -9,7 +9,7 @@ export default function Login() {
 
   const handleLogin = (e) => {
     e.preventDefault();
-    if (email === "admin@example.com" && password === "123456") {
+    if (email === "a@a" && password === "a") {
       navigate("/home");
     } else {
       setError("Credenciais inválidas.");
