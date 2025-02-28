@@ -4,11 +4,9 @@ extern crate alloc;
 
 /// Import items from the SDK. The prelude contains common traits and macros.
 use stylus_sdk::prelude::*;
-use stylus_sdk::{msg, alloy_primitives::Address};
-//use stylus_sdk::storage::{StorageMap, StorageVec, StorageString};
-//use stylus_sdk::storage::{StorageAddress, StorageU64, StorageU128, StorageI128};
+use stylus_sdk::alloy_primitives::Address;
 
-use alloy_primitives::{I128};
+use alloy_primitives::I128;
 
 // Estrutura principal do contrato
 sol_storage! {
@@ -17,7 +15,7 @@ sol_storage! {
         address[] participants;
         mapping(address => string) names;
         mapping(address => int128) balances;
-        mapping(address => mapping(address => int128)) debts;
+        mapping(address => mapping(address => int128)) transactions;
     }
 }
 
@@ -25,11 +23,10 @@ sol_storage! {
 #[public]
 impl Group {
 
-    fn add_participant(&mut self, name: String, wallet: Address) -> Result<(), Vec<u8>> {
+    fn add_participant(&mut self, wallet: Address) -> Result<(), Vec<u8>> {
     
         // Criando um novo participante
         self.participants.push(wallet);
-        self.names.setter(wallet).set_str(&name);
      
         // Inicializando o saldo do participante em 0
         self.balances.insert(wallet, I128::ZERO);
@@ -45,8 +42,20 @@ impl Group {
         return self.balances.get(wallet);
     }
 
+    /// Função auxiliar para verificar se uma carteira está no grupo
+    fn is_participant(&self, wallet: Address) -> bool {
+        let mut is_participant = false;
+        for i in 0..self.participants.len() {
+            if self.participants.get(i).unwrap() == wallet {
+                is_participant = true;
+                break;
+            }
+        }
+        return is_participant;
+    }
+
     // Função para registrar uma despesa e ajustar os saldos
-    fn add_expense(&mut self, payer: Address, borrowers: Vec<Address>, amount: I128) -> Result<(), Vec<u8>> {
+    fn split_equally(&mut self, payer: Address, borrowers: Vec<Address>, amount: I128) -> Result<(), Vec<u8>> {
         if borrowers.is_empty() {
             panic!("Borrowers array cannot be empty");
         }
@@ -98,18 +107,79 @@ impl Group {
         Ok(())
     }
 
-    /// Função auxiliar para verificar se uma carteira está no grupo
-    fn is_participant(&self, wallet: Address) -> bool {
-        let mut is_participant = false;
-        for i in 0..self.participants.len() {
-            if self.participants.get(i).unwrap() == wallet {
-                is_participant = true;
-                break;
-            }
-        }
-        return is_participant;
-    }
+    //----------------------------------------------------------------------------------------------------------------------------
 
+     // Função principal para calcular transações a partir de saldos e endereços
+     pub fn simplify_debts(&mut self) {
+
+        // 1. Coleta os saldos dos participantes
+        let mut balances: Vec<I128> = Vec::new();
+        let mut addresses = Vec::new();
+        for i in 0..self.participants.len() {
+            let addr = self.participants.get(i).unwrap();
+            let balance = self.balances.get(addr); // 0 se não houver saldo
+            balances.push(balance);
+            addresses.push(addr);
+        }
+
+        // Separa credores e devedores com seus índices originais
+        let mut creditors: Vec<(usize, I128)> = balances
+            .iter()
+            .enumerate()
+            .filter(|(_, &b)| b > I128::ZERO)
+            .map(|(i, &b)| (i, b)) // Converte i128 positivo para u128
+            .collect();
+        let mut debtors: Vec<(usize, I128)> = balances
+            .iter()
+            .enumerate()
+            .filter(|(_, &b)| b < I128::ZERO)
+            .map(|(i, &b)| (i, (-b))) // Converte i128 negativo para u128 (valor absoluto)
+            .collect();
+
+        // Ordena em ordem decrescente para priorizar grandes transações
+        creditors.sort_by(|a, b| b.1.cmp(&a.1));
+        debtors.sort_by(|a, b| b.1.cmp(&a.1));
+
+        let mut transactions = Vec::new();
+        let mut creditor_idx = 0;
+        let mut debtor_idx = 0;
+
+        // Processa transações até zerar credores ou devedores
+        while creditor_idx < creditors.len() && debtor_idx < debtors.len() {
+            let creditor = creditors[creditor_idx];
+            let debtor = debtors[debtor_idx];
+            let amount = creditor.1.min(debtor.1); // Menor valor entre crédito e dívida
+
+            // Adiciona a transação: (credor -> devedor, valor)
+            transactions.push((
+                addresses[creditor.0], // Endereço do credor
+                addresses[debtor.0],   // Endereço do devedor
+                amount,
+            ));
+
+            // Ajusta os saldos restantes
+            creditors[creditor_idx].1 -= amount;
+            debtors[debtor_idx].1 -= amount;
+
+            // Avança para o próximo credor ou devedor se o saldo zerar
+            if creditors[creditor_idx].1 == I128::ZERO {
+                creditor_idx += 1;
+            }
+            if debtors[debtor_idx].1 == I128::ZERO {
+                debtor_idx += 1;
+            }
+
+            
+        }
+
+        // 3. Armazena as transações no mapping transactions
+        for (creditor, debtor, amount) in transactions {
+            // Usar setter para o nível externo e configurar o valor no nível interno
+            let mut inner_map = self.transactions.setter(creditor);
+            // O StorageGuardMut não tem set, então usamos o método correto
+            inner_map.insert(debtor, amount);
+        }
+    }
 }
 
 

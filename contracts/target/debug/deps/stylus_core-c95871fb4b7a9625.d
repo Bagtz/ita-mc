@@ -1,0 +1,11 @@
+/home/bagtz/modular-carnival/ita-mc/contracts/target/debug/deps/libstylus_core-c95871fb4b7a9625.rmeta: /home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/stylus-core-0.8.1/src/lib.rs /home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/stylus-core-0.8.1/src/calls/mod.rs /home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/stylus-core-0.8.1/src/calls/context.rs /home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/stylus-core-0.8.1/src/calls/errors.rs /home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/stylus-core-0.8.1/src/deploy.rs /home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/stylus-core-0.8.1/src/host.rs /home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/stylus-core-0.8.1/src/storage.rs
+
+/home/bagtz/modular-carnival/ita-mc/contracts/target/debug/deps/stylus_core-c95871fb4b7a9625.d: /home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/stylus-core-0.8.1/src/lib.rs /home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/stylus-core-0.8.1/src/calls/mod.rs /home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/stylus-core-0.8.1/src/calls/context.rs /home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/stylus-core-0.8.1/src/calls/errors.rs /home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/stylus-core-0.8.1/src/deploy.rs /home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/stylus-core-0.8.1/src/host.rs /home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/stylus-core-0.8.1/src/storage.rs
+
+/home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/stylus-core-0.8.1/src/lib.rs:
+/home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/stylus-core-0.8.1/src/calls/mod.rs:
+/home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/stylus-core-0.8.1/src/calls/context.rs:
+/home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/stylus-core-0.8.1/src/calls/errors.rs:
+/home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/stylus-core-0.8.1/src/deploy.rs:
+/home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/stylus-core-0.8.1/src/host.rs:
+/home/bagtz/.cargo/registry/src/index.crates.io-6f17d22bba15001f/stylus-core-0.8.1/src/storage.rs:
