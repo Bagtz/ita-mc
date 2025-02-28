@@ -1,44 +1,45 @@
 import React, { useState, useEffect } from "react";
 import { Pencil } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import "./HomePage.css"; // Importando o CSS
+import "./HomePage.css"; // Importing CSS
+
+// Wallet connection (Metamask, etc.)
+import { ConnectButton } from '@rainbow-me/rainbowkit';
+
+// Import the contract interaction function
+import { addParticipant, getBalance, isParticipant } from "../App"; // Adjust the import path as needed
 
 const HomePage = () => {
   const [groupName, setGroupName] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [people, setPeople] = useState([]);
   const [newName, setNewName] = useState("");
-  const [newBalance, setNewBalance] = useState("");
+  const [newAddress, setNewAddress] = useState(""); // New state for address input
+  const [loading, setLoading] = useState(false); // Loading state for contract interactions
 
   const navigate = useNavigate();
 
-  // Carrega os dados salvos no localStorage ao montar o componente
+  // Load saved data from localStorage when component mounts
   useEffect(() => {
     try {
       const savedData = localStorage.getItem("appData");
-      console.log("Dados brutos carregados do localStorage:", savedData);
 
       if (savedData) {
         const parsedData = JSON.parse(savedData);
-        console.log("Dados parsed do localStorage:", parsedData);
-        
-        // Verifica se parsedData.groupName e parsedData.people têm valores válidos
         setGroupName(parsedData.groupName || "Lista de Pessoas");
         setPeople(Array.isArray(parsedData.people) ? parsedData.people : []);
       } else {
-        console.log("Nenhum dado encontrado no localStorage, usando valores padrão");
         setGroupName("Lista de Pessoas");
         setPeople([]);
       }
     } catch (error) {
       console.error("Erro ao carregar dados do localStorage:", error);
-      console.log("Usando valores padrão devido a erro");
       setGroupName("Lista de Pessoas");
       setPeople([]);
     }
-  }, []); // Executa apenas uma vez ao montar o componente
+  }, []);
 
-  // Salva os dados no localStorage sempre que houver alterações
+  // Save data to localStorage whenever there are changes
   useEffect(() => {
     try {
       const dataToSave = {
@@ -46,24 +47,46 @@ const HomePage = () => {
         people,
       };
       localStorage.setItem("appData", JSON.stringify(dataToSave));
-      console.log("Dados salvos no localStorage:", dataToSave);
     } catch (error) {
       console.error("Erro ao salvar dados no localStorage:", error);
     }
-  }, [groupName, people]); // Executa toda vez que groupName ou people mudam
+  }, [groupName, people]);
 
-  const addPerson = () => {
-    if (newName.trim() === "") return;
-    setPeople([
-      ...people,
-      { id: people.length + 1, name: newName, balance: 0 }
-    ]);
-    setNewName("");
-    setNewBalance("");
+  const addPerson = async () => {
+    // Only proceed if both name and address are filled
+    if (newName.trim() === "" || newAddress.trim() === "") return;
+    
+    setLoading(true);
+    
+    try {
+      // Call the contract to add the participant
+      await addParticipant(newAddress);
+      
+      // After successful contract interaction, update the UI
+      setPeople([
+        ...people,
+        { 
+          id: people.length + 1, 
+          name: newName, 
+          address: newAddress,
+          balance: 0 
+        }
+      ]);
+      
+      // Clear inputs after adding
+      setNewName("");
+      setNewAddress("");
+    } catch (error) {
+      console.error("Error adding participant to contract:", error);
+      alert("Falha ao adicionar participante ao contrato. Verifique o console para mais detalhes.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const removePerson = (id) => {
     setPeople(people.filter((person) => person.id !== id));
+    // Note: There is no contract function to remove participants in the provided code
   };
 
   const handleGroupNameChange = (e) => {
@@ -76,16 +99,22 @@ const HomePage = () => {
     }
   };
 
-  // Função para lidar com a tecla Enter no input de nome
-  const handleNameInputKeyPress = (e) => {
-    if (e.key === "Enter") {
+  // Function to handle Enter key in input fields
+  const handleInputKeyPress = (e) => {
+    if (e.key === "Enter" && newName.trim() !== "" && newAddress.trim() !== "") {
       addPerson();
     }
   };
 
   return (
     <div className="page-container">
+      <div className="top-bar">
+        <div className="connect-button-container">
+        </div>
+      </div>
+      
       <div className="card-container">
+      <ConnectButton />
         {/* Header */}
         <div className="header">
           {isEditing ? (
@@ -112,6 +141,7 @@ const HomePage = () => {
             <thead>
               <tr className="table-header">
                 <th>Nome</th>
+                <th>Wallet</th>
                 <th>Saldo</th>
                 <th>Ações</th>
               </tr>
@@ -121,6 +151,7 @@ const HomePage = () => {
                 people.map((person) => (
                   <tr key={person.id} className="table-row">
                     <td>{person.name}</td>
+                    <td>{person.address}</td>
                     <td>
                       {person.balance.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                     </td>
@@ -136,7 +167,7 @@ const HomePage = () => {
                 ))
               ) : (
                 <tr className="table-row">
-                  <td colSpan="3" className="empty-state">
+                  <td colSpan="4" className="empty-state">
                     Nenhuma pessoa adicionada ainda.
                   </td>
                 </tr>
@@ -153,10 +184,24 @@ const HomePage = () => {
             placeholder="Nome da pessoa"
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
-            onKeyPress={handleNameInputKeyPress} // Mantém o evento para Enter
+            onKeyPress={handleInputKeyPress}
+            disabled={loading}
           />
-          <button onClick={addPerson} className="add-button">
-            Adicionar
+          <input
+            type="text"
+            className="address-input"
+            placeholder="Wallet da pessoa"
+            value={newAddress}
+            onChange={(e) => setNewAddress(e.target.value)}
+            onKeyPress={handleInputKeyPress}
+            disabled={loading}
+          />
+          <button 
+            onClick={addPerson} 
+            className="add-button"
+            disabled={newName.trim() === "" || newAddress.trim() === "" || loading}
+          >
+            {loading ? "Adicionando..." : "Adicionar"}
           </button>
         </div>
       </div>
